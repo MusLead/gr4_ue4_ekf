@@ -7,9 +7,16 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+add_executable(recorder src/recorder.cpp)
+ament_target_dependencies(recorder geometry_msgs nav_msgs sensor_msgs rclcpp std_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -24,9 +31,15 @@ if(BUILD_TESTING)
 endif()
 
 install(DIRECTORY
-launch
-config
-DESTINATION share/${PROJECT_NAME}
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}
+)
+
+
+install(TARGETS
+  recorder
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()
