@@ -96,33 +96,42 @@ def set_expanding_limits(ax, data, prev_xlim, prev_ylim):
     min_x, max_x = min(x_vals), max(x_vals)
     min_y, max_y = min(y_vals), max(y_vals)
 
-    # Determine the largest range to decide on padding
+    # Determine the range for x and y separately
     range_x = abs(max_x - min_x)
     range_y = abs(max_y - min_y)
-    max_range = max(range_x, range_y, 1e-9)  # avoid log10(0)
 
-    if max_range <= 1.0:
-        unit_padding = round(max_range * 0.2, 5)  # dynamic padding for small values
-    elif max_range <= 10:
-        unit_padding = 0.5
+    # Calculate adaptive padding for x-axis
+    if range_x <= 1.0:
+        padding_x = round(range_x * 0.2, 5)
+    elif range_x <= 10:
+        padding_x = 0.5
     else:
-        magnitude = int(np.log10(max_range))
-        unit_padding = 10 ** magnitude + 1
+        magnitude_x = int(np.log10(range_x))
+        padding_x = 10 ** magnitude_x + 1
 
-    # Handle edge case where min == max
+    # Calculate adaptive padding for y-axis
+    if range_y <= 1.0:
+        padding_y = round(range_y * 0.2, 5)
+    elif range_y <= 10:
+        padding_y = 0.5
+    else:
+        magnitude_y = int(np.log10(range_y))
+        padding_y = 10 ** magnitude_y + 1
+
+    # Handle edge cases
     if min_x == max_x:
-        min_x -= unit_padding
-        max_x += unit_padding
+        min_x -= padding_x
+        max_x += padding_x
     else:
-        min_x -= unit_padding
-        max_x += unit_padding
+        min_x -= padding_x
+        max_x += padding_x
 
     if min_y == max_y:
-        min_y -= unit_padding
-        max_y += unit_padding
+        min_y -= padding_y
+        max_y += padding_y
     else:
-        min_y -= unit_padding
-        max_y += unit_padding
+        min_y -= padding_y
+        max_y += padding_y
 
     new_xlim = (
         min(min_x, prev_xlim[0]) if prev_xlim else min_x,
