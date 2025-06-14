@@ -28,11 +28,11 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')}],  # Use the absolute path
             remappings=[
      		   ('/odometry/filtered', '/odometry/filtered_gr4')
-	    ]
+            ]
         ),
         Node(
             package='ekf_gr4',      # Change to your actual package name
-            executable='recorder', # Matches what you defined in CMakeLists.txt
+            executable='recorder',  # Matches what you defined in CMakeLists.txt
             name='trajectory_recorder',
             output='screen'
         )
