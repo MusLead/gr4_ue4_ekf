@@ -1,3 +1,11 @@
+/**
+ * @file recorder_v2.cpp
+ * @brief Trajectory recording node for ROS2, records odometry and IMU data.
+ * 
+ * main author: Pascal Grosch
+ * edited by: Agha Muhammad Aslam
+ */
+
 #include <memory>
 #include <fstream>
 
