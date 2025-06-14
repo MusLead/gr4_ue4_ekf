@@ -5,7 +5,6 @@
  * main author: Pascal Grosch
  * edited by: Agha Muhammad Aslam
  */
-
 #include <memory>
 #include <fstream>
 
@@ -17,15 +16,11 @@ using std::placeholders::_1;
 
 class TrajectoryRecorder : public rclcpp::Node {
 public:
-    TrajectoryRecorder(std::ofstream& odom_out, std::ofstream& imu_out)
-        : Node("trajectory_recorder"), odom_out_(odom_out), imu_out_(imu_out)
+    TrajectoryRecorder(std::ofstream& odom_out, std::ofstream& imu_out, std::ofstream& odom_filtered_out)
+        : Node("trajectory_recorder"), odom_out_(odom_out), imu_out_(imu_out), odom_filtered_out_(odom_filtered_out)
 
     {
-
-        odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/rosbot_base_controller/odom", 10,
-            std::bind(&TrajectoryRecorder::odom_callback, this, _1));
-
+        
         global_x_ = 0;
         global_y_ = 0;
         global_z_ = 0;
@@ -33,13 +28,17 @@ public:
         first_ = true;
         first_odom_ = true;
 
+        odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+            "/rosbot_base_controller/odom", 10,
+            std::bind(&TrajectoryRecorder::odom_callback, this, _1));
+        
         imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
             "/imu_broadcaster/imu", 10,
             std::bind(&TrajectoryRecorder::imu_callback, this, _1));
 
         odom_filtered_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
             "/odometry/filtered_gr4", 10,
-            std::bind(&TrajectoryRecorder::odom_callback, this, _1));
+            std::bind(&TrajectoryRecorder::odom_filtered_callback, this, _1));
 
 
         imu_x_ = 0;
@@ -57,7 +56,7 @@ private:
 
     std::ofstream& odom_out_;
     std::ofstream& imu_out_;
-    std::ofstream odom_filtered_out_;
+    std::ofstream& odom_filtered_out_;
 
     double imu_x_;
     double imu_z_;
@@ -109,7 +108,6 @@ private:
         last_imu_time_ = current_time;
     }
 
-
     void odom_callback(const nav_msgs::msg::Odometry& msg) {
         geometry_msgs::msg::PoseWithCovariance pose = msg.pose;
         double x = pose.pose.position.x;
@@ -130,7 +128,7 @@ private:
 
         if (odom_out_.good()) {
             std::cout << "[Odom] x " << x << ", y "<< y << std::endl;
-            odom_out_ << x << " " << y << " " << z << std::endl;
+            odom_out_ << x << " " << y << std::endl;
         }
     }
 
@@ -142,20 +140,23 @@ private:
 
         if (first_odom_) {
             first_odom_ = false;
-            odom_offset_x_ = pose.pose.position.x;
-            odom_offset_y_ = pose.pose.position.y;
-            odom_offset_z_ = pose.pose.position.z;
+            odom_filtered_offset_x_ = pose.pose.position.x;
+            odom_filtered_offset_y_ = pose.pose.position.y;
+            odom_filtered_offset_z_ = pose.pose.position.z;
         }
         else {
             
-            x = x - odom_offset_x_;
-            y = y - odom_offset_y_;
-            z = z - odom_offset_z_;
+            x = x - odom_filtered_offset_x_;
+            y = y - odom_filtered_offset_y_;
+            z = z - odom_filtered_offset_z_;
         }
 
         if (odom_filtered_out_.good()) {
             std::cout << "[Odom Filtered] x " << x << ", y "<< y << std::endl;
-            odom_filtered_out_ << x << " " << y << " " << z << std::endl;
+            odom_filtered_out_ << x << " " << y << std::endl;
+        } else {
+            RCLCPP_ERROR(this->get_logger(), "Failed to write to odom_filtered_out_");
+            std::cerr << "Failed to write to odom_filtered_out_" << std::endl;
         }
     }
 
@@ -166,6 +167,10 @@ private:
     double odom_offset_x_ = 0.0;
     double odom_offset_y_ = 0.0;
     double odom_offset_z_ = 0.0;
+
+    double odom_filtered_offset_x_ = 0.0;
+    double odom_filtered_offset_y_ = 0.0;
+    double odom_filtered_offset_z_ = 0.0;
 
     double last_vel_x_ = 0.0;
     double last_vel_y_ = 0.0;
@@ -179,12 +184,13 @@ private:
 
 
 int main(int argc, char** argv) {
-    std::ofstream odom_out("odom.txt");
+    std::ofstream odom_out("odometry.txt");
     std::ofstream imu_out("imu.txt");
+    std::ofstream odom_filtered_out("odometry_filtered.txt");
 
 
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<TrajectoryRecorder>(odom_out, imu_out);
+    auto node = std::make_shared<TrajectoryRecorder>(odom_out, imu_out, odom_filtered_out);
     rclcpp::spin(node);
     rclcpp::shutdown();
 
