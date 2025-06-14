@@ -4,6 +4,7 @@ from matplotlib.animation import FuncAnimation
 import time
 import os
 import numpy as np
+import warnings
 import signal
 import sys
 
@@ -142,8 +143,10 @@ def set_expanding_limits(ax, data, prev_xlim, prev_ylim):
         max(max_y, prev_ylim[1]) if prev_ylim else max_y
     )
 
-    ax.set_xlim(new_xlim)
-    ax.set_ylim(new_ylim)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        ax.set_xlim(new_xlim)
+        ax.set_ylim(new_ylim)
     return new_xlim, new_ylim
 
 # === Update plot data for a given index ===
