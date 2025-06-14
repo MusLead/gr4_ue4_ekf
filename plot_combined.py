@@ -9,9 +9,21 @@ import signal
 import sys
 
 # === File paths ===
-ODOM_FILE = 'odometry.txt'
-ODOM_FILTERED_FILE = 'odometry_filtered.txt'
-IMU_FILE = 'imu.txt'
+from datetime import datetime
+
+date_folder = datetime.now().strftime("%Y-%m-%d")
+plot_date = date_folder.replace('-', '_')
+name_folder = f"EKF_Visualization_{plot_date}"
+os.makedirs(name_folder, exist_ok=True)
+
+ODOM_FILE = os.path.join(name_folder, 'odometry.txt')
+ODOM_FILTERED_FILE = os.path.join(name_folder, 'odometry_filtered.txt')
+IMU_FILE = os.path.join(name_folder, 'imu.txt')
+
+# Warn if files do not exist
+for f in [ODOM_FILE, ODOM_FILTERED_FILE, IMU_FILE]:
+    if not os.path.isfile(f):
+        warnings.warn(f"File not found: {f}", RuntimeWarning)
 
 # === Read data from file ===
 def read_data(filename):
@@ -158,7 +170,7 @@ def update_plots(idx):
     imu = imu_data[:idx]
 
     if odo:
-        x, y = zip(*odo)
+        x, y = zip(*[(row[0], row[1]) for row in odo])
         odom_line.set_data(x, y)
         odom_start.set_data([odo[0][0]], [odo[0][1]])
         odom_end.set_data([odo[-1][0]], [odo[-1][1]])
@@ -167,7 +179,7 @@ def update_plots(idx):
         odom_comb_end.set_data([odo[-1][0]], [odo[-1][1]])
 
     if odo_filt:
-        x, y = zip(*odo_filt)
+        x, y = zip(*[(row[0], row[1]) for row in odo_filt])
         odom_filt_line.set_data(x, y)
         odom_filt_start.set_data([odo_filt[0][0]], [odo_filt[0][1]])
         odom_filt_end.set_data([odo_filt[-1][0]], [odo_filt[-1][1]])
@@ -176,7 +188,7 @@ def update_plots(idx):
         odom_filt_comb_end.set_data([odo_filt[-1][0]], [odo_filt[-1][1]])
 
     if imu:
-        x, y = zip(*imu)
+        x, y = zip(*[(row[0], row[1]) for row in imu])
         imu_line.set_data(x, y)
         imu_start.set_data([imu[0][0]], [imu[0][1]])
         imu_end.set_data([imu[-1][0]], [imu[-1][1]])
@@ -236,9 +248,10 @@ def live_update(frame):
         frame_slider.set_val(max_len)
 
 # === Animation Start ===
-ani = FuncAnimation(fig, live_update, interval=500, cache_frame_data=False)
+anim = FuncAnimation(fig, live_update, interval=500, cache_frame_data=False)
 
 # === Initial plot ===
-fig.canvas.manager.set_window_title("Odometry, Filtered & IMU - Centered View")
+
+fig.canvas.manager.set_window_title(name_folder)
 update_plots(1)
 plt.show()
