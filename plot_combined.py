@@ -11,6 +11,7 @@ import sys
 # === File paths ===
 from datetime import datetime
 
+# TOD: the cpp does not create the odometry files in the expected folder. please change the path to the folder where the cpp creates the files.!
 date_folder = datetime.now().strftime("%Y-%m-%d")
 plot_date = date_folder.replace('-', '_')
 name_folder = f"EKF_Visualization_{plot_date}"
