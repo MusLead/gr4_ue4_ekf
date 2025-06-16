@@ -185,9 +185,15 @@ private:
 
 
 int main(int argc, char** argv) {
-    std::ofstream odom_out("odometry.txt");
-    std::ofstream imu_out("imu.txt");
-    std::ofstream odom_filtered_out("odometry_filtered.txt");
+    if (argc < 2) {
+        std::cerr << "Usage: recorder <output_folder>" << std::endl;
+        return 1;
+    }
+
+    std::string folder = argv[1];
+    std::ofstream odom_out(folder + "/odometry.txt");
+    std::ofstream imu_out(folder + "/imu.txt");
+    std::ofstream odom_filtered_out(folder + "/odometry_filtered.txt");
 
 
     rclcpp::init(argc, argv);

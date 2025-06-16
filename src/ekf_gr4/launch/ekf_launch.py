@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -12,6 +12,11 @@ def generate_launch_description():
         'config',
         'ekf.yaml'
     )
+
+     # Generate folder name
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    measurement_folder = f"/tmp/Measurement_{timestamp}"  # or another base path you want
+    os.makedirs(measurement_folder, exist_ok=True)
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -34,7 +39,18 @@ def generate_launch_description():
             package='ekf_gr4',      # Change to your actual package name
             executable='recorder',  # Matches what you defined in CMakeLists.txt
             name='trajectory_recorder',
-            output='screen'
+            output='screen'',
+            arguments=[measurement_folder]
+        ),
+        ExecuteProcess(
+            cmd=['python3', 
+                 os.path.join(
+                     get_package_share_directory('ekf_gr4'),
+                     'scripts',
+                     'plot_combined.py'
+                 ), 
+                 measurement_folder],
+            shell=False
         )
     ])
 
