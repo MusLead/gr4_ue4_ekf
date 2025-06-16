@@ -44,7 +44,7 @@ install(TARGETS
 
 install(PROGRAMS
   scripts/plot_combined.py
-  DESTINATION lib/${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()

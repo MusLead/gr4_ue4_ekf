@@ -1,3 +1,4 @@
+from datetime import datetime  # ✅ Klasse importieren
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -39,14 +40,14 @@ def generate_launch_description():
             package='ekf_gr4',      # Change to your actual package name
             executable='recorder',  # Matches what you defined in CMakeLists.txt
             name='trajectory_recorder',
-            output='screen'',
+            output='screen',
             arguments=[measurement_folder]
         ),
         ExecuteProcess(
             cmd=['python3', 
                  os.path.join(
                      get_package_share_directory('ekf_gr4'),
-                     'scripts',
+                     # 'scripts',
                      'plot_combined.py'
                  ), 
                  measurement_folder],
